@@ -34,12 +34,20 @@
 
 ## 快速开始
 
-1. 从 [Releases](https://github.com/wzp100/NightDisplay/releases) 下载 `NightDisplay-1.3.0-win-x64.zip` 并解压。
-   保持 `NightDisplay.exe`、`NightDisplay.Guard.exe` 与 `driver/` 位于同一目录。
-2. 启动 `NightDisplay.exe`，在「设置与保护」中安装虚拟屏驱动（需要管理员授权）。
+从 [Releases](https://github.com/wzp100/NightDisplay/releases) 选择一种方式：
+
+| 方式 | 文件 | 说明 |
+| --- | --- | --- |
+| **安装版**（推荐） | `NightDisplay-1.3.0-setup-x64.exe` | 安装到 `Program Files`，创建开始菜单与可选桌面快捷方式，带卸载程序 |
+| 免安装版 | `NightDisplay-1.3.0-win-x64.zip` | 解压即用，保持 `NightDisplay.exe`、`NightDisplay.Guard.exe` 与 `driver/` 同目录 |
+
+1. 运行安装程序或解压后启动 `NightDisplay.exe`。
+2. 在「设置与保护」中安装虚拟屏驱动（需要管理员授权）。安装版可在安装向导中勾选安装驱动。
    如果电脑已有可用的虚拟显示器，可以直接在列表中选择。
 3. 先点击「测试 8 秒」，确认能够自动恢复，再进入虚拟屏。
 4. 默认 `Ctrl + Alt + F9` 切换，`Ctrl + Alt + F10` 恢复；快捷键可在设置中更改，Windows 的 `Win + P` 仍然可用。
+
+> 应用与安装程序均未做代码签名，Windows SmartScreen 可能提示「未知发布者」。请核对下载来源为本仓库的 Releases 页面。
 
 > 关闭或最小化设置窗口会结束界面进程，后台只保留控制与托盘；需要再次打开时从托盘进入。
 > 完全退出请使用托盘菜单中的「恢复并退出」。首次运行会启用当前用户登录启动，可在设置中关闭。
@@ -96,9 +104,12 @@ Visual Studio 可直接打开 `NightDisplay.sln`。SDK 首次构建可能需要�
 打包：
 
 ```powershell
-./scripts/package.ps1            # 运行包
+./scripts/package.ps1            # 运行包（zip）
 ./scripts/package.ps1 -Source    # 源码包
+./scripts/build-installer.ps1    # 安装包（需要 Inno Setup 6）
 ```
+
+安装包使用 [Inno Setup 6](https://jrsoftware.org/isinfo.php) 构建，脚本位于 `installer/NightDisplay.iss`。未安装时可用 `winget install JRSoftware.InnoSetup` 获取。安装程序按用户会话启动后台进程（`runasoriginaluser`），卸载时会先恢复实体屏并退出后台，再删除文件。
 
 打包仅纳入明确列出的源码或发布文件，排除访问密钥、本机配置、二维码、日志、快捷方式与机器诊断。
 
