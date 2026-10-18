@@ -1,0 +1,25 @@
+# Generated outputs
+artifacts/
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+# Legacy local installation and machine-specific artifacts
+/NightDisplay.exe
+/NightDisplay.Guard.exe
+/NightDisplay.Tests.exe
+/phone.html
+/*.lnk
+/diagnostics.txt
+/self-test*.txt
+/手机扫码.png
+/手机控制预览.jpg
+/验证记录.md
+# Secrets and local sessions
+settings.json
+recovery.json
+phone-link.txt
+*.log
+*.tmp
+/local/

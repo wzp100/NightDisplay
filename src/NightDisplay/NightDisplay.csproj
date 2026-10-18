@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>5</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>../../assets/icons/nightdisplay.ico</ApplicationIcon>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <EmbeddedResource Include="../../web/index.html" LogicalName="NightDisplay.Web.index.html" />
+    <EmbeddedResource Include="../../web/app.css" LogicalName="NightDisplay.Web.app.css" />
+    <EmbeddedResource Include="../../web/app.js" LogicalName="NightDisplay.Web.app.js" />
+    <EmbeddedResource Include="../../assets/icons/nightdisplay.png" LogicalName="NightDisplay.Web.icon.png" />
+    <EmbeddedResource Include="../../assets/icons/nightdisplay.ico" LogicalName="NightDisplay.Icons.nightdisplay.ico" />
+    <EmbeddedResource Include="../../assets/icons/tray.ico" LogicalName="NightDisplay.Icons.tray.ico" />
+    <EmbeddedResource Include="UI/Theme.xaml" LogicalName="NightDisplay.UI.Theme.xaml" />
+    <EmbeddedResource Include="UI/Panel.xaml" LogicalName="NightDisplay.UI.Panel.xaml" />
+    <Content Include="../../driver/**/*" Link="driver/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <Target Name="BuildNativeGuard" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\build-native.ps1&quot; -OutputDirectory &quot;$(TargetDir).&quot;" />
+  </Target>
+</Project>

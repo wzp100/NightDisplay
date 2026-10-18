@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#12252c">
+  <title>NightDisplay · 屏幕控制</title>
+  <link rel="icon" href="/icon.png">
+  <link rel="stylesheet" href="/app.css">
+  <script defer src="/app.js"></script>
+</head>
+<body><main>
+  <header><img src="/icon.png" alt="" width="48" height="48"><div class="wordmark">NightDisplay<span>夜间屏幕控制</span></div></header>
+  <h1>让屏幕休息。</h1><p class="subtitle">电脑继续工作，你可以安心休息。</p>
+  <section class="card output" aria-label="当前屏幕状态">
+    <div class="statushead"><span>当前输出</span><span id="connection"><i class="dot"></i><span id="connectiontext">连接中</span></span></div>
+    <div class="monitor" aria-hidden="true"><div class="moon">☾</div></div>
+    <h2 id="mode">正在读取…</h2><div id="displays">等待电脑响应</div>
+    <div id="countdown" hidden></div>
+  </section>
+  <section id="auth" class="auth card" aria-label="连接电脑">
+    <label for="tokeninput">访问密钥</label><p class="help">打开电脑复制的完整链接，或在这里粘贴链接。</p>
+    <input id="tokeninput" autocomplete="off" spellcheck="false" placeholder="密钥或完整链接">
+    <button id="connect">连接电脑</button>
+  </section>
+  <div class="actions"><button class="primary" id="physical" disabled>恢复实体屏<span>让真实屏幕亮起来</span></button>
+    <button id="virtual" disabled>进入虚拟屏<span>屏幕休息，后台继续</span></button>
+    <button class="quiet" id="test" disabled>先测试 8 秒 · 到时自动恢复</button></div>
+  <p id="message" role="status" aria-live="polite"></p>
+  <section class="keys"><span class="eyebrow">电脑快捷键</span><div id="keys">连接后显示快捷键</div></section>
+  <footer>手机与电脑连接同一局域网。<br>页面关闭后，后台工作和恢复保护继续运行。</footer>
+</main></body></html>

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETFramework,Version=v4.8": {
+      "nightdisplay": {
+        "type": "Project"
+      }
+    },
+    ".NETFramework,Version=v4.8/win-x64": {}
+  }
+}
