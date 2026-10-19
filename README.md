@@ -104,12 +104,14 @@ Visual Studio 可直接打开 `NightDisplay.sln`。SDK 首次构建可能需要�
 打包：
 
 ```powershell
-./scripts/package.ps1            # 运行包（zip）
+./scripts/release.ps1            # 一条命令：构建 + 测试 + 便携版 + 安装版
+./scripts/release.ps1 -SkipUpload   # 只生成本地产物，不上传
 ./scripts/package.ps1 -Source    # 源码包
-./scripts/build-installer.ps1    # 安装包（需要 Inno Setup 6）
 ```
 
-安装包使用 [Inno Setup 6](https://jrsoftware.org/isinfo.php) 构建，脚本位于 `installer/NightDisplay.iss`。未安装时可用 `winget install JRSoftware.InnoSetup` 获取。安装程序按用户会话启动后台进程（`runasoriginaluser`），卸载时会先恢复实体屏并退出后台，再删除文件。
+`release.ps1` 依次执行 `build.ps1 -Test`、便携版打包与安装包编译，产物位于 `artifacts/`。推送到 GitHub 的 `v*` 标签（如 `v1.4.0`）时，CI 会自动执行同样的流程并把两种包发布到对应的 GitHub Release。
+
+安装包使用 [Inno Setup 6](https://jrsoftware.org/isinfo.php) 构建，脚本位于 `installer/NightDisplay.iss`，向导支持英文与简体中文。未安装时可用 `winget install JRSoftware.InnoSetup` 获取。安装程序按用户会话启动后台进程（`runasoriginaluser`），卸载时会先恢复实体屏并退出后台，再删除文件。
 
 打包仅纳入明确列出的源码或发布文件，排除访问密钥、本机配置、二维码、日志、快捷方式与机器诊断。
 

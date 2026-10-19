@@ -1,4 +1,4 @@
-﻿param([switch]$Source)
+﻿param([string]$Version = '1.3.0', [switch]$Source)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [Console]::OutputEncoding
@@ -15,7 +15,7 @@ if ($Source) {
         }
         foreach ($taskFile in $taskFiles) { $taskNames += $taskFile.FullName.Substring($taskRoot.Length + 1) }
     }
-    $taskZip = Join-Path $taskRoot 'artifacts\NightDisplay-1.3.0-source.zip'
+    $taskZip = Join-Path $taskRoot ('artifacts\NightDisplay-' + $Version + '-source.zip')
     foreach ($taskName in $taskNames) {
         $taskDestination = Join-Path $taskStage $taskName
         New-Item -ItemType Directory -Path (Split-Path -Parent $taskDestination) -Force | Out-Null
@@ -28,7 +28,7 @@ if ($Source) {
         Copy-Item -LiteralPath (Join-Path $taskRelease $taskName) -Destination $taskStage -Recurse
     }
     Copy-Item -LiteralPath (Join-Path $taskRoot 'README.md') -Destination $taskStage
-    $taskZip = Join-Path $taskRoot 'artifacts\NightDisplay-1.3.0-win-x64.zip'
+    $taskZip = Join-Path $taskRoot ('artifacts\NightDisplay-' + $Version + '-win-x64.zip')
 }
 $taskEntries = @(Get-ChildItem -LiteralPath $taskStage -Force | Select-Object -ExpandProperty FullName)
 Compress-Archive -LiteralPath $taskEntries -DestinationPath $taskZip -Force

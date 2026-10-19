@@ -1,5 +1,5 @@
-; NightDisplay installer (Inno Setup 6)
-; Build with:  ./scripts/build-installer.ps1
+﻿; NightDisplay installer (Inno Setup 6)
+; Build with:  ./scripts/build-installer.ps1   (or ./scripts/release.ps1 for both packages)
 ; The release folder must already contain NightDisplay.exe and NightDisplay.Guard.exe.
 
 #ifndef AppVersion
@@ -25,7 +25,7 @@ AppSupportURL={#AppUrl}
 AppUpdatesURL={#AppUrl}/releases
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany={#AppPublisher}
-VersionInfoDescription={#AppName} 安装程序
+VersionInfoDescription={#AppName} Setup
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -45,16 +45,27 @@ LicenseFile={#ProjectRoot}\LICENSE
 DisableReadyMemo=no
 CloseApplications=no
 RestartApplications=no
+ShowLanguageDialog=auto
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-; Chinese translations are not bundled with Inno Setup. Drop ChineseSimplified.isl into
-; the Languages folder (https://github.com/jrsoftware/issrc) and enable this line:
-; Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimplified"; MessagesFile: "Languages\ChineseSimplified.isl"
+
+[CustomMessages]
+desktopicon=Create a &desktop shortcut
+installdriver=&Install the virtual display driver (administrator consent required)
+readme=User guide (README)
+launch=Launch %1
+installDriverNow=Install the virtual display driver
+chinesesimplified.desktopicon=创建桌面快捷方式(&D)
+chinesesimplified.installdriver=安装虚拟显示器驱动（需要管理员授权）(&I)
+chinesesimplified.readme=使用说明（README）
+chinesesimplified.launch=启动 %1
+chinesesimplified.installDriverNow=安装虚拟显示器驱动
 
 [Tasks]
-Name: "desktopicon"; Description: "创建桌面快捷方式"; GroupDescription: "附加任务："; Flags: unchecked
-Name: "installdriver"; Description: "安装虚拟显示器驱动（需要重启前确认）"; GroupDescription: "附加任务："; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:desktopicon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "installdriver"; Description: "{cm:installdriver}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "{#ReleaseDir}\NightDisplay.exe"; DestDir: "{app}"; Flags: ignoreversion
@@ -66,15 +77,15 @@ Source: "{#ProjectRoot}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\NightDisplay.exe"
-Name: "{group}\使用说明"; Filename: "{app}\README.md"
-Name: "{group}\卸载 {#AppName}"; Filename: "{uninstallexe}"
+Name: "{group}\{cm:readme}"; Filename: "{app}\README.md"
+Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\NightDisplay.exe"; Tasks: desktopicon
 
 [Run]
 ; runasoriginaluser: the background process and tray must live in the logged-on user's session,
 ; not the elevated installer's session.
-Filename: "{app}\NightDisplay.exe"; Description: "启动 {#AppName}"; Flags: nowait postinstall skipifsilent runasoriginaluser
-Filename: "{app}\NightDisplay.exe"; Parameters: "--install-driver"; Description: "安装虚拟显示器驱动"; Flags: nowait runasoriginaluser; Tasks: installdriver
+Filename: "{app}\NightDisplay.exe"; Description: "{cm:launch,{#AppName}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
+Filename: "{app}\NightDisplay.exe"; Parameters: "--install-driver"; Description: "{cm:installDriverNow}"; Flags: nowait runasoriginaluser; Tasks: installdriver
 
 [UninstallRun]
 ; Restore the physical display before files are removed. --quit restores, then exits the background.
