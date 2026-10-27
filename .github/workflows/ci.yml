@@ -93,4 +93,4 @@ jobs:
           } else {
             gh release create $tag $zip $setup --title "NightDisplay $version" --notes $notes --verify-tag
           }
-          if ($LASTEXITCODE -ne 0) { throw '发布 Release 失败。' }
+          if ($LASTEXITCODE -ne 0) { throw 'Publish release failed.' }
