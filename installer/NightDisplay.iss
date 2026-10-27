@@ -3,7 +3,7 @@
 ; The release folder must already contain NightDisplay.exe and NightDisplay.Guard.exe.
 
 #ifndef AppVersion
-  #define AppVersion "1.3.0"
+  #define AppVersion "1.3.1"
 #endif
 #ifndef AppName
   #define AppName "NightDisplay"
@@ -82,6 +82,8 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\NightDisplay.exe"; Tasks: desktopicon
 
 [Run]
+; Register fixed device-control actions while setup is elevated. No idle service is created.
+Filename: "{app}\NightDisplay.exe"; Parameters: "--configure-device-control"; Flags: runhidden waituntilterminated
 ; runasoriginaluser: the background process and tray must live in the logged-on user's session,
 ; not the elevated installer's session.
 Filename: "{app}\NightDisplay.exe"; Description: "{cm:launch,{#AppName}}"; Flags: nowait postinstall skipifsilent runasoriginaluser
@@ -91,6 +93,7 @@ Filename: "{app}\NightDisplay.exe"; Parameters: "--install-driver"; Description:
 ; Restore the physical display before files are removed. --quit restores, then exits the background.
 Filename: "{app}\NightDisplay.exe"; Parameters: "--quit"; Flags: runhidden waituntilterminated; RunOnceId: "QuitBackground"
 Filename: "{app}\NightDisplay.exe"; Parameters: "--restore --headless"; Flags: runhidden waituntilterminated; RunOnceId: "RestoreDisplay"
+Filename: "{app}\NightDisplay.exe"; Parameters: "--remove-device-control"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveDeviceControl"
 ; Remove the per-user logon entry the app creates (it lives in the uninstalling user's hive).
 Filename: "{sys}\reg.exe"; Parameters: "delete ""HKCU\Software\Microsoft\Windows\CurrentVersion\Run"" /v NightDisplay /f"; Flags: runhidden waituntilterminated; RunOnceId: "RemoveLogonEntry"
 

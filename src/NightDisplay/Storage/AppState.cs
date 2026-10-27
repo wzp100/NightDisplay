@@ -11,6 +11,7 @@ namespace NightDisplay
     public sealed class Settings
     {
         public string VirtualDevicePath = "";
+        public string VirtualDriverInstanceId = "";
         public uint Modifiers = 3;
         public uint ToggleKey = 0x78;
         public uint RestoreKey = 0x79;
@@ -23,6 +24,7 @@ namespace NightDisplay
     public sealed class RecoveryState
     {
         public bool VirtualRequested;
+        public string VirtualDriverInstanceId = "";
         public string Paths = "", Modes = "";
         public string[] DevicePaths = new string[0];
         public int OwnerPid;

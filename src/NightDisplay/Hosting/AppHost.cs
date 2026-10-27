@@ -33,6 +33,7 @@ namespace NightDisplay
             AppState.WriteJson(AppState.SettingsPath, settings);
             recovery = AppState.ReadJson<RecoveryState>(AppState.RecoveryPath);
             if (recovery.VirtualRequested || NativeDisplay.IsVirtualOnly()) Recovery.Restore();
+            else if (!string.IsNullOrEmpty(recovery.VirtualDriverInstanceId)) Recovery.Restore();
             using (var current = Process.GetCurrentProcess()) {
                 recovery = AppState.ReadJson<RecoveryState>(AppState.RecoveryPath);
                 recovery.OwnerPid = current.Id; recovery.OwnerStartTicks = current.StartTime.ToUniversalTime().Ticks;
@@ -44,6 +45,8 @@ namespace NightDisplay
             window = new HostWindow(Receive);
             tray = new NativeTray(window.Handle, TrayAction);
             RegisterKeys(); RefreshTargets(); StartGuard();
+            // Migrate old installations that left the bundled virtual monitor connected at idle.
+            window.Post(delegate { Run(HideIdleVirtualDisplay); });
             panels = new PanelServer(PanelCommand); panels.Start();
             timer = new Timer { Interval = 3000 };
             timer.Tick += delegate {
@@ -81,19 +84,36 @@ namespace NightDisplay
         void RefreshTargets()
         {
             targets = NativeDisplay.Targets();
-            var selected = targets.FirstOrDefault(t => t.Virtual && string.Equals(t.DevicePath, settings.VirtualDevicePath, StringComparison.OrdinalIgnoreCase))
+            foreach (var device in VirtualDisplayDevice.Installed()) {
+                var current = targets.Where(device.Matches).ToArray();
+                foreach (var target in current) target.DriverInstanceId = device.InstanceId;
+                if (current.Length == 0) targets.Add(device.Placeholder());
+            }
+            var selected = targets.FirstOrDefault(t => t.Virtual && !string.IsNullOrEmpty(settings.VirtualDriverInstanceId) && string.Equals(t.DriverInstanceId, settings.VirtualDriverInstanceId, StringComparison.OrdinalIgnoreCase))
+                ?? targets.FirstOrDefault(t => t.Virtual && string.Equals(t.DevicePath, settings.VirtualDevicePath, StringComparison.OrdinalIgnoreCase))
                 ?? targets.FirstOrDefault(t => t.Virtual);
-            if (selected != null && settings.VirtualDevicePath != selected.DevicePath) { settings.VirtualDevicePath = selected.DevicePath; SaveSettings(); }
+            if (selected != null && (settings.VirtualDevicePath != selected.DevicePath || settings.VirtualDriverInstanceId != selected.DriverInstanceId)) {
+                settings.VirtualDevicePath = selected.DevicePath; settings.VirtualDriverInstanceId = selected.DriverInstanceId ?? ""; SaveSettings();
+            }
             RefreshStatus();
+        }
+        void HideIdleVirtualDisplay()
+        {
+            if (NativeDisplay.IsVirtualOnly() || string.IsNullOrEmpty(settings.VirtualDriverInstanceId)) return;
+            DeviceControlTasks.EnsureAvailable(settings.VirtualDriverInstanceId);
+            VirtualDisplayDevice.Disable(settings.VirtualDriverInstanceId);
+            RefreshTargets();
         }
         void RefreshStatus()
         {
             var active = NativeDisplay.Query(false).Paths.Select(NativeDisplay.Describe).ToArray();
             bool isVirtual = active.Length > 0 && active.All(t => t.Virtual);
             if (virtualOnly && !isVirtual) {
+                // Windows/Win+P may have ended virtual-only output outside our own controls.
+                // Restore verifies physical output and removes the managed virtual device first.
+                Recovery.Restore();
                 recovery = AppState.ReadJson<RecoveryState>(AppState.RecoveryPath);
-                recovery.VirtualRequested = false; recovery.RestoreAfterUtcTicks = 0;
-                AppState.WriteJson(AppState.RecoveryPath, recovery);
+                active = NativeDisplay.Query(false).Paths.Select(NativeDisplay.Describe).ToArray();
             }
             virtualOnly = isVirtual;
             NativeDisplay.SetThreadExecutionState(0x80000000u | (isVirtual && settings.KeepAwake ? 3u : 0u));
@@ -118,7 +138,7 @@ namespace NightDisplay
             if (NativeDisplay.IsVirtualOnly()) { if (seconds > 0) throw new InvalidOperationException("请先恢复实体屏，再进行测试。"); return; }
             RefreshTargets();
             var selected = targets.FirstOrDefault(t => t.Virtual && t.DevicePath == settings.VirtualDevicePath);
-            lease.Pulse(); DisplaySwitchService.EnterVirtual(selected, recovery, seconds); RefreshStatus();
+            lease.Pulse(); DisplaySwitchService.EnterVirtual(selected, recovery, seconds, lease.Pulse); RefreshTargets();
         }
         void RestorePhysical() { Recovery.Restore(); recovery = AppState.ReadJson<RecoveryState>(AppState.RecoveryPath); RefreshTargets(); }
         void Toggle() { if (NativeDisplay.IsVirtualOnly()) RestorePhysical(); else SwitchVirtual(0); }
@@ -166,7 +186,7 @@ namespace NightDisplay
         PanelSnapshot Snapshot()
         {
             // Copy settings to prevent cross-thread serialization of mutable state.
-            return new PanelSnapshot { Settings = new Settings { VirtualDevicePath = settings.VirtualDevicePath,
+            return new PanelSnapshot { Settings = new Settings { VirtualDevicePath = settings.VirtualDevicePath, VirtualDriverInstanceId = settings.VirtualDriverInstanceId,
                 Modifiers = settings.Modifiers, ToggleKey = settings.ToggleKey, RestoreKey = settings.RestoreKey,
                 KeepAwake = settings.KeepAwake, LanEnabled = settings.LanEnabled, LanConsentVersion = settings.LanConsentVersion,
                 LanPort = settings.LanPort, LanToken = settings.LanToken }, Targets = targets.Where(t => t.Virtual).ToArray(),
@@ -185,7 +205,11 @@ namespace NightDisplay
                         case "show": ShowPanel(); break;
                         case "refresh": RefreshTargets(); break;
                         case "virtual": case "physical": case "toggle": case "test": Execute(request.Action); break;
-                        case "target": settings.VirtualDevicePath = request.DevicePath; SaveSettings(); break;
+                        case "target":
+                            var target = targets.FirstOrDefault(t => t.Virtual && t.DevicePath == request.DevicePath);
+                            if (target == null) throw new InvalidOperationException("所选虚拟显示器已不可用，请刷新后重试。");
+                            settings.VirtualDevicePath = target.DevicePath; settings.VirtualDriverInstanceId = target.DriverInstanceId ?? ""; SaveSettings();
+                            HideIdleVirtualDisplay(); break;
                         case "awake": settings.KeepAwake = request.Enabled; SaveSettings(); RefreshStatus(); break;
                         case "startup": AppState.SetStartup(request.Enabled, Program.Exe); break;
                         case "lan": settings.LanEnabled = request.Enabled; settings.LanConsentVersion = 2; SaveSettings(); if (request.Enabled) StartLan(); else StopLan(); break;

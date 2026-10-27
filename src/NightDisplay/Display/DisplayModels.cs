@@ -76,7 +76,7 @@ namespace NightDisplay
     }
     public sealed class DisplayTarget
     {
-        public string Key, Name, DevicePath, AdapterPath;
+        public string Key, Name, DevicePath, AdapterPath, DriverInstanceId;
         public bool Virtual, Active;
         public uint Technology;
         public PathInfo Path;

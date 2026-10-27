@@ -136,14 +136,14 @@ namespace NightDisplay
             {
                 try {
                     RestoreSnapshot(preferred, true);
-                    if (!IsVirtualOnly()) return;
+                    if (Query(false).Paths.Any(p => !Describe(p).Virtual)) return;
                 } catch (Exception) { }
             }
             foreach (var target in Targets().Where(t => !t.Virtual).OrderByDescending(t => t.Active).ThenByDescending(t => t.Technology == 0x80000000))
             {
                 try {
                     RestoreSnapshot(SingleTarget(target, false), true);
-                    if (!IsVirtualOnly()) return;
+                    if (Query(false).Paths.Any(p => !Describe(p).Virtual)) return;
                 } catch (Exception) { }
             }
             throw new InvalidOperationException("未能恢复实体屏。请使用 Win + P 切换，或连接实体显示器。");

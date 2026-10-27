@@ -1,4 +1,4 @@
-﻿param([string]$Version = '1.3.0', [switch]$Source)
+﻿param([string]$Version = '1.3.1', [switch]$Source)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [Console]::OutputEncoding

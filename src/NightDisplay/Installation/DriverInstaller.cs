@@ -21,15 +21,7 @@ namespace NightDisplay
         static void Require(bool success, string action) { if (!success) throw new Win32Exception(Marshal.GetLastWin32Error(), action); }
         public static bool Installed()
         {
-            using (var search = new System.Management.ManagementObjectSearcher("SELECT HardwareID FROM Win32_PnPEntity WHERE PNPDeviceID LIKE 'ROOT%'"))
-            using (var result = search.Get())
-                foreach (System.Management.ManagementObject device in result) {
-                    using (device) {
-                        var ids = device["HardwareID"] as string[];
-                        if (ids != null && ids.Any(id => string.Equals(id, @"Root\MttVDD", StringComparison.OrdinalIgnoreCase))) return true;
-                    }
-                }
-            return false;
+            return VirtualDisplayDevice.Installed().Count > 0;
         }
         public static void VerifyPackage(string folder)
         {

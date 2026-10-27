@@ -39,6 +39,20 @@ class IntegrationTests
         Console.OutputEncoding = new UTF8Encoding(false);
         try
         {
+            bool physicalActive = false, deviceDisabled = false;
+            Recovery.RestoreOutput(delegate { return physicalActive; }, delegate { physicalActive = true; }, delegate { deviceDisabled = physicalActive; });
+            Assert(deviceDisabled, "先恢复并验证实体屏，再关闭虚拟显示设备");
+            bool layoutReset = false;
+            Recovery.RestoreOutput(delegate { return true; }, delegate { layoutReset = true; }, delegate { });
+            Assert(!layoutReset, "通过 Win+P 回到实体屏后保留当前显示布局");
+            deviceDisabled = false; bool rejected = false;
+            try { Recovery.RestoreOutput(delegate { return false; }, delegate { }, delegate { deviceDisabled = true; }); }
+            catch (InvalidOperationException) { rejected = true; }
+            Assert(rejected && !deviceDisabled, "实体屏恢复验证失败时保留虚拟设备输出");
+            bool cleanupFailed = false;
+            try { Recovery.RestoreOutput(delegate { return true; }, delegate { }, delegate { throw new IOException("设备关闭失败"); }); }
+            catch (IOException) { cleanupFailed = true; }
+            Assert(cleanupFailed, "虚拟设备清理失败不会被报告为恢复成功");
             var snapshot = new DisplaySnapshot { Paths = new[] { new PathInfo {
                 Source = new PathSource { Adapter = new Luid { High = -3, Low = 123 }, Id = 2, ModeIndex = 0 },
                 Target = new PathTarget { Adapter = new Luid { High = -3, Low = 123 }, Id = 5, Available = true,

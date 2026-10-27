@@ -21,7 +21,20 @@ namespace NightDisplay
         [STAThread]
         public static int Main(string[] args)
         {
+            // Scheduled SYSTEM actions must not initialize user UI, recovery files or display APIs.
+            if (args.Length == 2 && (args[0] == "--device-enable" || args[0] == "--device-disable")) {
+                try {
+                    if (!DeviceControlTasks.IsAdministrator()) return 1;
+                    VirtualDisplayDevice.ChangeState(args[1], args[0] == "--device-enable"); return 0;
+                } catch { return 1; }
+            }
             Directory.CreateDirectory(AppState.DirectoryPath);
+            if (args.Contains("--configure-device-control") || args.Contains("--remove-device-control")) {
+                try {
+                    if (args.Contains("--remove-device-control")) DeviceControlTasks.Remove(); else DeviceControlTasks.Configure();
+                    return 0;
+                } catch (Exception ex) { AppState.Log(ex.ToString()); return 1; }
+            }
             if (args.Contains("--panel")) {
                 bool panelCreated;
                 using (var panelMutex = new Mutex(true, @"Local\NightDisplay.Panel.v2", out panelCreated)) {
@@ -43,7 +56,8 @@ namespace NightDisplay
                     {
                         using (var elevated = Process.Start(new ProcessStartInfo(Exe, args.Contains("--setup") ? "--setup" : "--install-driver") { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden })) { elevated.WaitForExit(); return elevated.ExitCode; }
                     }
-                    if (!NativeDisplay.Targets().Any(t => t.Virtual)) DriverInstaller.Install(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "driver"));
+                    if (!DriverInstaller.Installed() && !NativeDisplay.Targets().Any(t => t.Virtual)) DriverInstaller.Install(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "driver"));
+                    if (DriverInstaller.Installed() && DeviceControlTasks.SupportsTasks) DeviceControlTasks.Configure();
                     // Driver setup does not start or configure the optional LAN feature.
                     return 0;
                 }
